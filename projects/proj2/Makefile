@@ -1,38 +1,30 @@
 ################################################################
 #
-# Makefile for toupper.asm
-# Last Edited 2/5/2015
+# Makefile for proj2
+# Last Edited 2/15/2015
 #
 ################################################################
 
-CC=gcc
 AS=nasm
-LD=ld
+LD=gcc
 ASFLAGS=-f elf -g -F dwarf
-LDFLAGS=-melf_i386
-.PREFIXES= .c .o .asm
+LDFLAGS=-m32 -g
+.PREFIXES= .o .asm
 
-ASM_SOURCE=toupper.asm
+ALL_TARGETS=libc_example
 
-C_SOURCE=my_c.c
-
-ALL_TARGETS=toupper
+ASM_SOURCE=libc_example.asm
 
 ASM_OBJECTS=${ASM_SOURCE:.asm=.o}
-
-C_OBJECTS=${ASM_SOURCE:.c=.o}
 
 all: ${ALL_TARGETS}
 
 %.o: %.asm
 	${AS} ${ASFLAGS} $< -o $@
 
-%.o: %.c
-	${CC} -c ${CFLAGS} $< -o $@
-
-${ALL_TARGETS}: ${ASM_OBJECTS} ${C_OBJECTS}
+libc_example: libc_example.o
 	${LD} ${LDFLAGS} -o $@ $<
 
 clean:
-	rm -f *.o ${ALL_TARGETS}
+	rm -f *.o ${ALL_TARGETS} *.lst
 
