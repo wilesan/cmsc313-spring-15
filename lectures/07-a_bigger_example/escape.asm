@@ -1,6 +1,10 @@
-; File: escape.asm
+; File: toupper.asm last updated 09/26/2001
+; Minor updates to comments 02/05/2015
 ;
-; A Linux filter that expands C-style escape codes
+; Convert user input to upper case.
+;
+; Assemble using NASM:  nasm -f elf -g -F stabs toupper.asm
+; Link with ld:  ld -o toupper toupper.o -melf_i386
 ;
 
 %define STDIN 0
@@ -10,29 +14,39 @@
 %define SYSCALL_WRITE 4
 %define BUFLEN 256
 
+
         SECTION .data                   ; initialized data section
 
-msg1:   db "String to un-escape: "		; user prompt
+msg1:   db "Enter string: "             ; user prompt
 len1:   equ $-msg1                      ; length of first message
+
 msg2:   db "Original: "                 ; original string label
 len2:   equ $-msg2                      ; length of second message
 
 msg3:   db "Convert:  "                 ; converted string label
 len3:   equ $-msg3
+
 msg4:   db 10, "Read error", 10         ; error message
 len4:   equ $-msg4
 
+msg_invalid_escape: db "Error: invalid escape character \ ", 10
+len_invalid_escape: equ $-msg_invalid_escape
+
+msg_octal_overflow: db "Error: octal overlow \   ", 10
+len_octal_overflow: equ $-msg_octal_overflow
 
         SECTION .bss                    ; uninitialized data section
-rbuf:    resb BUFLEN                    ; buffer for read
+buf:    resb BUFLEN                     ; buffer for read
+newstr: resb BUFLEN                     ; converted string
 rlen:   resb 4                          ; length
-dbuf:	resb BUFLEN						; destination buffer
 
-	section .text
-	global _start
-_start:		nop
-	; initialize
-start:
+
+        SECTION .text                   ; Code section.
+        global  _start                  ; let loader see entry point
+
+_start: nop                             ; Entry point.
+start:                                  ; address for gdb
+
         ; prompt user for input
         ;
         mov     eax, SYSCALL_WRITE      ; write function
@@ -45,99 +59,118 @@ start:
         ;
         mov     eax, SYSCALL_READ       ; read function
         mov     ebx, STDIN              ; Arg 1: file descriptor
-        mov     ecx, rbuf               ; Arg 2: address of buffer
+        mov     ecx, buf                ; Arg 2: address of buffer
         mov     edx, BUFLEN             ; Arg 3: buffer length
         int     080h
 
         ; error check
         ;
+        mov     [rlen], eax             ; save length of string read
         cmp     eax, 0                  ; check if any chars read
         jg      read_OK                 ; >0 chars read = OK
-        mov     eax, SYSCALL_WRITE      ; print error mesg
+        mov     eax, SYSCALL_WRITE      ; ow print error mesg
         mov     ebx, STDOUT
         mov     ecx, msg4
         mov     edx, len4
         int     080h
         jmp     exit                    ; skip over rest
 read_OK:
-		; begin checking the input
-		mov		[rlen], eax				; store value of rlen
-		xor		edi, edi				; Zero destination offset
-		xor		esi, esi				; Zero source offset
+
+
+        ; Loop for upper case conversion
+        ; assuming rlen > 0
+        ;
+L1_init:
+		mov		esi, 0
+		mov		edi, 0
+		mov		ebx, 0
 loop:
-		mov		bl, [rbuf + esi]		; get a character into the buffer
-		cmp		bl, '\'					; Check if it is a backslash
-		je		is_backslash			; It is a backslash
-		mov		[dbuf + edi], bl		; Copy source into destination
-		inc		esi						; Increment source
-		inc		edi						; Increment destination
-		cmp		esi, [rlen]				; Compare esi to the length of the original buffer
-		jne		loop					; Loop if they aren't equal
+        mov     bl, [buf+esi]           ; get a character
+        cmp		bl, '\'					; Test for backslash
+        je		is_backslash
+        mov     [newstr + edi], bl      ; store char in new string
+        inc     edi                     ; update dest pointer
+        inc		esi                     ; update char count
+        cmp		esi, [rlen]
+        jne     loop                   ; loop to top if more chars
+        jmp		done
 
 is_backslash:
-		inc		esi						; We'll skip the backslash
-		mov		bl, [rbuf + esi]		; Get the next character from the input stream
-		cmp		bl, 'a'					; Check if it is an alert
-		jne		not_alert				; Try the next escape character
-		mov		[dbuf + edi], byte 7	; Add alert character to output
-		jmp		advance_and_loop		; Go to next character
+		inc		esi						; Look at the next character
+		mov		bl, [buf+esi]				; Get next char into bl
+		cmp		bl, 'a'					; Check for alert
+		jne		not_alert
+		mov		[newstr+edi], byte 7
+		jmp		advance_and_loop
 
 not_alert:
-		cmp		bl, 'b'					; Check if it is a backspace
-		jne		not_backspace			; Try the next escape character
-		mov		[dbuf + edi], byte 8	; Add backspace character to output
-		jmp		advance_and_loop		; Go to next character
-
-not_backspace:
-		cmp		bl, 't'					; Check if it is a tab
-		jne		not_tab					; Try the next escape character
-		mov		[dbuf + edi], byte 9	; Add tab character to output
-		jmp		advance_and_loop		; Go to next character
-
-not_tab:
-		cmp		bl, 'n'					; Check if it is newline
-		jne		not_newline				; Try the next escape character
-		mov		[dbuf + edi], byte 10	; Add newline character to output
-		jmp		advance_and_loop		; Go to next character
+		cmp		bl, 'n'
+		jne		not_newline
+		mov		[newstr+edi], byte 10
+		jmp		advance_and_loop
 
 not_newline:
-		cmp		bl, 'v'					; Check if it is a vertical tab
-		jne		not_vtab				; Try the next escape character
-		mov		[dbuf + edi], byte 11	; Add vertical tab character to output
-		jmp		advance_and_loop		; Go to next character
+		mov		eax, 0
+		mov		ecx, 0
 
-not_vtab:
-		cmp		bl, 'f'					; Check if it is a formfeed
-		jne		not_formfeed			; Try the next esacpe character
-		mov		[dbuf + edi], byte 12	; Add formfeed character to output
-		jmp		advance_and_loop		; Go to next character
+octal_loop:
+		cmp		bl, '0'
+		jl		not_octal_digit
+		cmp		bl, '7'
+		jg		not_octal_digit
+		inc		ecx
+		inc		esi
+		sub		bl, '0'
+		shl		eax, 3
+		add		eax, ebx
+		mov		bl, [esi + buf]
+		cmp		ecx, 3
+		jne		octal_loop
+		cmp		eax, 255
+		jg		octal_out_of_range
 
-not_formfeed:
-		cmp		bl, 'r'					; Check if it is a carriage return
-		jne		not_carriagereturn		; Try the next escape character
-		mov		[dbuf + edi], byte 13	; Add carriage return to output
-		jmp		advance_and_loop		; Go to next character
+not_octal_digit:
+		cmp		ecx, 0
+		je		invalid_escape
+		mov		[newstr + edi], al
+		inc 	edi
+		jmp		loop
 
-not_carriagereturn:
-		cmp		bl, '\'					; Check if it is a backslash
-		jne		not_backslash			; Try the next escape character
-		mov		[dbuf + edi], byte 92	; Add backslash to output
-		jmp		advance_and_loop		; Go to next character
+octal_out_of_range:
+		mov		al, [buf + esi - 3]
+		mov		[msg_octal_overflow + len_octal_overflow - 4], al
+		mov		al, [buf + esi - 2]
+		mov		[msg_octal_overflow + len_octal_overflow - 3], al
+		mov		al, [buf + esi - 1]
+		mov		[msg_octal_overflow + len_octal_overflow - 2], al
+        mov     eax, SYSCALL_WRITE      ; write message
+        mov     ebx, STDOUT
+        mov     ecx, msg_octal_overflow
+        mov     edx, len_octal_overflow
+        int     080h
+		jmp		loop
 
-not_backslash:
-		cmp		bl, '0'					; See if we're in octal range
-		jl		octal_out_of_range		; Handle octal out of range problem
-		cmp		bl, '7'					; See if we're within hi end of octal
-		jg		octal_out_of_range		; Handle octal out of range problem
-
-		jmp		done					; We're done
+invalid_escape:
+		mov		[msg_invalid_escape + len_invalid_escape - 2], byte bl
+        mov     eax, SYSCALL_WRITE      ; write message
+        mov     ebx, STDOUT
+        mov     ecx, msg_invalid_escape
+        mov     edx, len_invalid_escape
+        int     080h
 
 advance_and_loop:
-		inc		esi						; Increment source
-		inc		edi						; Increment destination
-		jmp		loop					; Loop to next character
+		inc		esi
+		inc		edi
+		jmp		loop
 
+L1_cont:
+        mov     [edi], al               ; store char in new string
+        inc     edi                     ; update dest pointer
+        dec     ecx                     ; update char count
+        jnz     loop                  ; loop to top if more chars
 done:
+
+
         ; print out user input for feedback
         ;
         mov     eax, SYSCALL_WRITE      ; write message
@@ -148,7 +181,7 @@ done:
 
         mov     eax, SYSCALL_WRITE      ; write user input
         mov     ebx, STDOUT
-        mov     ecx, rbuf
+        mov     ecx, buf
         mov     edx, [rlen]
         int     080h
 
@@ -162,8 +195,8 @@ done:
 
         mov     eax, SYSCALL_WRITE      ; write out string
         mov     ebx, STDOUT
-        mov     ecx, dbuf
-        mov     edx, edi
+        mov     ecx, newstr
+        mov     edx, [rlen]
         int     080h
 
 
