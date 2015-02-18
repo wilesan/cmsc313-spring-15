@@ -12,11 +12,11 @@ ASFLAGS=-f elf -g -F dwarf
 LDFLAGS=-melf_i386
 .PREFIXES= .c .o .asm
 
-ASM_SOURCE=escape.asm
+ASM_SOURCE=escape.asm escape-complete.asm
 
 C_SOURCE=my_c.c
 
-ALL_TARGETS=escape
+ALL_TARGETS=escape escape-complete
 
 ASM_OBJECTS=${ASM_SOURCE:.asm=.o}
 
@@ -30,7 +30,10 @@ all: ${ALL_TARGETS}
 %.o: %.c
 	${CC} -c ${CFLAGS} $< -o $@
 
-${ALL_TARGETS}: ${ASM_OBJECTS} ${C_OBJECTS}
+escape: escape.o
+	${LD} ${LDFLAGS} -o $@ $<
+
+escape-complete: escape-complete.o
 	${LD} ${LDFLAGS} -o $@ $<
 
 clean:

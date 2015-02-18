@@ -1,0 +1,6 @@
+escape.asm is the version that I completed in front of the class.
+
+escape-complete.asm is the version that I completed before class, and implments
+  all of the escape sequences.  It is also better commented.
+
+Both of these implementations are provided for your reference.
