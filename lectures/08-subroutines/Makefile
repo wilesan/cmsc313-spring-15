@@ -15,16 +15,32 @@ LDFLAGS=-melf_i386
 
 ASM_SOURCE=recurse.asm subroutine.asm
 
-ALL_TARGETS=recurse subroutine
+ALL_TARGETS=recurse subroutine rep switch toupper2
 
-ASM_OBJECTS=${ASM_SOURCE:.asm=.o}
+all: ${ALL_TARGETS}
 
-all: ${ALL_TARGETS} backup/rep backup/switch backup/toupper2
+rep.o: rep.asm
+	${AS} ${ASFLAGS} $< -o $@
 
-backup/rep backup/switch backup/toupper2:
-	cd backup; ${MAKE}
+switch.o: switch.asm
+	${AS} ${ASFLAGS} $< -o $@  -l switch.lst
+
+toupper2.o: toupper2.asm
+	${AS} ${ASFLAGS} $< -o $@
+
+rep: rep.o
+	${LD} ${LDFLAGS} -o $@ $<
+
+switch: switch.o
+	${LD} ${LDFLAGS} -o $@ $<
+
+toupper2: toupper2.o
+	${LD} ${LDFLAGS} -o $@ $<
 	
-%.o: %.asm
+recurse.o: recurse.asm
+	${AS} ${ASFLAGS} $< -o $@
+
+subroutine.o: subroutine.asm
 	${AS} ${ASFLAGS} $< -o $@
 
 recurse: recurse.o
