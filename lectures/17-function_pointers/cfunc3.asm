@@ -9,7 +9,7 @@ foo:			; comments & spacing added
 	push ebp	; set up stack frame
 	mov ebp, esp
 
-	mov eax, [ebp+8]	; addr to store return value
+	mov eax, [ebp+8]		; addr to store return value
 	add dword [ebp+12], 4	; r.part1 = [ebp+12]
 	add dword [ebp+16}, 3	; r.part2 = [ebp+16]
 
@@ -22,8 +22,8 @@ foo:			; comments & spacing added
 	jmp L1
 L1:
 	mov eax, eax		; does nothing
-	leave			; reset stack frame
-	ret 4			; pop 4 bytes after return
+	leave				; reset stack frame
+	ret 4				; pop 4 bytes after return
 Lfe1:
 	GLOBAL foo:function (.Lfe1-foo)
 SECTION	.rodata
@@ -54,33 +54,33 @@ main:
 	lea eax, [ebp-16]	; get address of r2
 	mov edx, [ebp-8]	; get r1.part1
 	mov ecx, [ebp-4]	; get r1.part2
-	push ecx		; push r1.part2
-	push edx		; push r1.part1
-	push eax		; push address of r2
+	push ecx			; push r1.part2
+	push edx			; push r1.part1
+	push eax			; push address of r2
 	call foo
-	add esp, 8		; pop r1
-				; ret 4 popped r2's address
+	add esp, 8			; pop r1
+						; ret 4 popped r2's address
 
 	; call printf
 	;
 	mov eax, [ebp-12]	; get r2.part2
-	push eax		; push it
+	push eax			; push it
 	mov eax, [ebp-8]	; get r2.part1
-	push eax		; push it
+	push eax			; push it
 	push dword .LC0		; string constant's address
 	call printf
-	add esp, 12		; pop off arguments
+	add esp, 12			; pop off arguments
 
 	; call foo again
 	;
 	lea eax, [ebp-36]	; address of temp variable
 	mov edx, [ebp-24]	; get r3.part1
 	mov ecx, [ebp-20]	; get r3.part2
-	push ecx		; push r3.part
-	push edx		; push r3.part1
-	push eax		; push address of temp variable
+	push ecx			; push r3.part
+	push edx			; push r3.part1
+	push eax			; push address of temp variable
 	call foo
-	add esp, 8		; pop off arguments
+	add esp, 8			; pop off arguments
 
 	; assign to n
 	;
@@ -88,7 +88,7 @@ main:
 	mov [ebp-28], eax	; store in n
 
 L2:
-	leave			; restore stack frame
+	leave				; restore stack frame
 	ret
 
 .Lfe2:

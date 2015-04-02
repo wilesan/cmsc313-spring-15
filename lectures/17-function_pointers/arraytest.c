@@ -1,7 +1,11 @@
 // File: arraytest.c
 //
 // C program to test arrayinc.asm //
+
+#include <stdio.h>
+
 void arrayinc(int A[], int n) ; 
+
 int main()
 {
 	int A[7] = {2, 7, 19, 45, 3, 42, 9} ;
