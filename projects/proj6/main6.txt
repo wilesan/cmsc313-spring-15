@@ -1,0 +1,67 @@
+0x000000: 31 32 33 34 35 36 37 38 12345678
+Total allocated entries: 10
+Total available entries: 8
+Addresses of available buf_structs:
+  0xa005078
+  0xa005068
+  0xa005058
+  0xa005048
+  0xa005038
+  0xa005028
+  0xa005018
+  0xa005008
+Total allocated entries: 10
+Total available entries: 10
+Addresses of available buf_structs:
+  0xa005088
+  0xa005098
+  0xa005078
+  0xa005068
+  0xa005058
+  0xa005048
+  0xa005038
+  0xa005028
+  0xa005018
+  0xa005008
+Total allocated entries: 20
+Total available entries: 9
+Addresses of available buf_structs:
+  0xa005128
+  0xa005118
+  0xa005108
+  0xa0050f8
+  0xa0050e8
+  0xa0050d8
+  0xa0050c8
+  0xa0050b8
+  0xa0050a8
+Total allocated entries: 20
+Total available entries: 9
+Addresses of available buf_structs:
+  0xa005128
+  0xa005118
+  0xa005108
+  0xa0050f8
+  0xa0050e8
+  0xa0050d8
+  0xa0050c8
+  0xa0050b8
+  0xa0050a8
+Total allocated entries: 20
+Total available entries: 11
+Addresses of available buf_structs:
+  0xa005098
+  0xa005088
+  0xa005128
+  0xa005118
+  0xa005108
+  0xa0050f8
+  0xa0050e8
+  0xa0050d8
+  0xa0050c8
+  0xa0050b8
+  0xa0050a8
+Total allocated entries: 10
+Total available entries: 1
+Addresses of available buf_structs:
+  0xa0050a8
