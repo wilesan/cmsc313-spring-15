@@ -23,8 +23,6 @@ all: ${ALL_TARGETS}
 
 main8.o: main8.c rot13_dev.h
 
-rot13_dev.o: rot13_dev.c rot13_dev.h
-
 main8: main8.o rot13_dev.o
 	${CC} ${CFLAGS} -o $@ main8.o rot13_dev.o
 
