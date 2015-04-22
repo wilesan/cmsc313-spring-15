@@ -12,7 +12,7 @@ ASFLAGS=-f elf -g -F dwarf
 
 ALL_TARGETS=main8
 
-C_SOURCE=main8.c rot13_dev.c
+C_SOURCE=main8.c
 
 C_OBJECTS=${C_SOURCE:.c=.o}
 
@@ -23,11 +23,9 @@ all: ${ALL_TARGETS}
 
 main8.o: main8.c rot13_dev.h
 
-rot13_dev.o: rot13_dev.c rot13_dev.h
-
 main8: main8.o rot13_dev.o
 	${CC} ${CFLAGS} -o $@ main8.o rot13_dev.o
 
 clean:
-	rm -f *.o ${ALL_TARGETS}
+	rm -f main8.o ${ALL_TARGETS}
 
